@@ -5,12 +5,12 @@ export const generateCozyMessage = async (
   treats: number,
   theme: string
 ): Promise<string> => {
-  if (!process.env.REACT_APP_API_KEY) {
+  if (!process.env.API_KEY) {
     console.warn("API Key missing for Gemini Service");
-    return "Great job, Cookie! (Add API Key for more stories)";
+    return "Great job, Cookie Monster! (Add API Key for more stories)";
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.REACT_APP_API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const prompt = `
     You are the narrator for a cute video game called "Cookie's Great Escape" about a Cavalier King Charles Spaniel.

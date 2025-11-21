@@ -31,14 +31,14 @@ const App: React.FC = () => {
     setScore(finalScore);
     setTreatsCollected(finalTreats);
     setGameState(GameState.GAME_OVER);
-    
+
     if (finalScore > highScore) {
       setHighScore(finalScore);
       localStorage.setItem('cookie_high_score', finalScore.toString());
     }
 
     // Fetch AI message
-    if (process.env.API_KEY) {
+    if (process.env.GEMINI_API_KEY) {
       setIsLoadingAi(true);
       try {
         const message = await generateCozyMessage(finalScore, finalTreats, currentTheme);
@@ -50,16 +50,17 @@ const App: React.FC = () => {
         setIsLoadingAi(false);
       }
     } else {
-      setAiMessage("Great run, Cookie! (Add API Key for custom stories!)");
+      console.log(JSON.stringify(process.env));
+      setAiMessage("Great run, Cookie! (Add API Key for custom stories!)" + JSON.stringify(process.env));
     }
   };
 
   return (
     <div className="relative w-full h-screen flex flex-col items-center justify-center bg-amber-50 overflow-hidden select-none">
-      
+
       {gameState === GameState.PLAYING && (
-        <GameCanvas 
-          onGameOver={handleGameOver} 
+        <GameCanvas
+          onGameOver={handleGameOver}
           onScoreUpdate={setScore}
           onTreatUpdate={setTreatsCollected}
           theme={currentTheme}
@@ -67,7 +68,7 @@ const App: React.FC = () => {
         />
       )}
 
-      <GameUI 
+      <GameUI
         gameState={gameState}
         score={score}
         highScore={highScore}
@@ -77,7 +78,7 @@ const App: React.FC = () => {
         isLoadingAi={isLoadingAi}
         currentTheme={currentTheme}
       />
-      
+
     </div>
   );
 };

@@ -11,7 +11,6 @@ const App: React.FC = () => {
   const [treatsCollected, setTreatsCollected] = useState(0);
   const [currentTheme, setCurrentTheme] = useState<LevelTheme>(LevelTheme.NEIGHBORHOOD);
   const [aiMessage, setAiMessage] = useState<string>("");
-  const [isLoadingAi, setIsLoadingAi] = useState(false);
 
   useEffect(() => {
     const storedHigh = localStorage.getItem('cookie_high_score');
@@ -27,40 +26,27 @@ const App: React.FC = () => {
     setAiMessage("");
   };
 
-  const handleGameOver = async (finalScore: number, finalTreats: number) => {
+  const handleGameOver = (finalScore: number, finalTreats: number) => {
     setScore(finalScore);
     setTreatsCollected(finalTreats);
     setGameState(GameState.GAME_OVER);
-
+    
     if (finalScore > highScore) {
       setHighScore(finalScore);
       localStorage.setItem('cookie_high_score', finalScore.toString());
     }
 
-    // Fetch AI message
-    if (process.env.GEMINI_API_KEY) {
-      setIsLoadingAi(true);
-      try {
-        const message = await generateCozyMessage(finalScore, finalTreats, currentTheme);
-        setAiMessage(message);
-      } catch (error) {
-        console.error("Failed to get AI message", error);
-        setAiMessage("Cookie is tired but happy! Good run!");
-      } finally {
-        setIsLoadingAi(false);
-      }
-    } else {
-      console.log(JSON.stringify(process.env));
-      setAiMessage("Great run, Cookie! (Add API Key for custom stories!)" + JSON.stringify(process.env));
-    }
+    // Generate cozy message locally
+    const message = generateCozyMessage(finalScore, finalTreats, currentTheme);
+    setAiMessage(message);
   };
 
   return (
     <div className="relative w-full h-screen flex flex-col items-center justify-center bg-amber-50 overflow-hidden select-none">
-
+      
       {gameState === GameState.PLAYING && (
-        <GameCanvas
-          onGameOver={handleGameOver}
+        <GameCanvas 
+          onGameOver={handleGameOver} 
           onScoreUpdate={setScore}
           onTreatUpdate={setTreatsCollected}
           theme={currentTheme}
@@ -68,17 +54,16 @@ const App: React.FC = () => {
         />
       )}
 
-      <GameUI
+      <GameUI 
         gameState={gameState}
         score={score}
         highScore={highScore}
         treats={treatsCollected}
         onStart={startGame}
         aiMessage={aiMessage}
-        isLoadingAi={isLoadingAi}
         currentTheme={currentTheme}
       />
-
+      
     </div>
   );
 };

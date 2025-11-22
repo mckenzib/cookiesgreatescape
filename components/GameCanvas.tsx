@@ -132,6 +132,61 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     ctx.fill();
   };
 
+  // Helper: Draw Bird
+  const drawBird = (ctx: CanvasRenderingContext2D, entity: Entity, frame: number) => {
+    const { x, y, width, height } = entity;
+    
+    ctx.fillStyle = COLORS.bird;
+    
+    // Body
+    ctx.beginPath();
+    ctx.ellipse(x + width/2, y + height/2, width/2, height/3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Head
+    ctx.beginPath();
+    ctx.arc(x + 10, y + height/2 - 5, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Beak
+    ctx.fillStyle = '#FFC107';
+    ctx.beginPath();
+    ctx.moveTo(x + 2, y + height/2 - 5);
+    ctx.lineTo(x - 5, y + height/2 - 2);
+    ctx.lineTo(x + 2, y + height/2 - 8);
+    ctx.fill();
+
+    // Wing (Flapping)
+    ctx.fillStyle = '#0288D1'; // Darker blue wing
+    const flap = Math.sin(frame * 0.3) * 10;
+    ctx.beginPath();
+    ctx.moveTo(x + 20, y + height/2);
+    ctx.lineTo(x + 10, y + height/2 - 15 + flap);
+    ctx.lineTo(x + 35, y + height/2 - 5 + flap);
+    ctx.fill();
+  };
+
+  // Helper: Draw Log
+  const drawLog = (ctx: CanvasRenderingContext2D, entity: Entity) => {
+    const { x, y, width, height } = entity;
+    
+    ctx.fillStyle = COLORS.log;
+    // Main log body
+    ctx.beginPath();
+    ctx.roundRect(x, y, width, height, 5);
+    ctx.fill();
+
+    // Bark details
+    ctx.fillStyle = '#3E2723';
+    ctx.fillRect(x + 5, y + 5, width - 10, 2);
+    ctx.fillRect(x + 10, y + 15, width - 20, 2);
+    
+    // Knot
+    ctx.beginPath();
+    ctx.arc(x + width/2, y + height/2, 4, 0, Math.PI * 2);
+    ctx.fill();
+  };
+
   // Helper: Create particles
   const createParticles = (x: number, y: number, color: string, count: number) => {
     for (let i = 0; i < count; i++) {
@@ -173,18 +228,21 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     }
 
     // Jump Input
-    if ((keysPressed.current.has(' ') || keysPressed.current.has('ArrowUp') || keysPressed.current.has('Click')) && !player.isJumping) {
+    const jumpRequested = keysPressed.current.has(' ') || keysPressed.current.has('ArrowUp') || keysPressed.current.has('Click');
+    if (jumpRequested && !player.isJumping) {
       player.vy = JUMP_STRENGTH;
       player.isJumping = true;
-      keysPressed.current.delete('Click'); // Consumed tap
     }
+    // Always consume the tap/click input so it doesn't stick around
+    keysPressed.current.delete('Click');
     
     // Animation Frame
     player.runFrame++;
 
     // Difficulty & Speed
     gameSpeedRef.current = Math.min(MAX_SPEED, gameSpeedRef.current + ACCELERATION);
-    scoreRef.current += 1; // Score based on time/distance
+    // Score increases based on speed (faster = more points)
+    scoreRef.current += (gameSpeedRef.current * 0.1);
     distanceRef.current += gameSpeedRef.current;
 
     // Theme Transition Logic (every 2000 distance units)
@@ -213,22 +271,30 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         // Obstacle Selection
         const obsRoll = Math.random();
         
-        if (obsRoll < 0.25) {
+        if (obsRoll < 0.15) {
           type = EntityType.OBSTACLE_GROUND; // Puddle
           eW = 50; eH = 15;
           eY = groundY - eH;
-        } else if (obsRoll < 0.50) {
+        } else if (obsRoll < 0.25) {
+          type = EntityType.OBSTACLE_POOP; // Poop (Reverted to larger size)
+          eW = 40; eH = 35;
+          eY = groundY - eH;
+        } else if (obsRoll < 0.40) {
           type = EntityType.OBSTACLE_BUSH; // Bush
           eW = 60; eH = 40;
           eY = groundY - eH;
-        } else if (obsRoll < 0.65) {
-          type = EntityType.OBSTACLE_POOP; // Poop
-          eW = 25; eH = 20;
+        } else if (obsRoll < 0.55) {
+          type = EntityType.OBSTACLE_LOG; // Log (New)
+          eW = 55; eH = 25;
           eY = groundY - eH;
-        } else if (obsRoll < 0.85) {
+        } else if (obsRoll < 0.70) {
           type = EntityType.OBSTACLE_AIR; // Squirrel
           eW = 50; eH = 30;
           eY = groundY - 90 - (Math.random() * 40);
+        } else if (obsRoll < 0.85) {
+          type = EntityType.OBSTACLE_BIRD; // Bird (New)
+          eW = 40; eH = 25;
+          eY = groundY - 80 - (Math.random() * 60);
         } else {
           type = EntityType.OBSTACLE_DOG; // Other Dog
           eW = 60; eH = 50;
@@ -237,7 +303,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       } else {
         // Collectible
         type = EntityType.COLLECTIBLE;
-        eW = 25; eH = 25;
+        eW = 30; eH = 30;
         eY = groundY - 30 - (Math.random() * 100);
       }
 
@@ -275,7 +341,8 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
           entity.markedForDeletion = true;
           treatsRef.current += 1;
           scoreRef.current += 50;
-          createParticles(entity.x + entity.width/2, entity.y + entity.height/2, COLORS.bone, 5);
+          createParticles(entity.x + entity.width/2, entity.y + entity.height/2, COLORS.bone, 8);
+          createParticles(entity.x + entity.width/2, entity.y + entity.height/2, '#FFD700', 5); // Gold sparkles
         } else {
           // Game Over
           cancelAnimationFrame(requestRef.current!);
@@ -309,9 +376,9 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     ctx.fillStyle = currentThemeColors.sky;
     ctx.fillRect(0, 0, width, height);
 
-    // Background Elements (Clouds/Trees - Simple Parallax)
+    // Background Elements (Clouds/Trees - Parallax linked to distance)
     ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-    const cloudOffset = (frameCountRef.current * 0.5) % width;
+    const cloudOffset = (distanceRef.current * 0.1) % width;
     ctx.beginPath();
     ctx.arc(width - cloudOffset, 50, 30, 0, Math.PI * 2);
     ctx.arc(width - cloudOffset + 40, 60, 40, 0, Math.PI * 2);
@@ -331,17 +398,25 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     // Draw Entities
     entitiesRef.current.forEach(entity => {
       if (entity.type === EntityType.COLLECTIBLE) {
-        // Treat/Bone
+        // Treat/Bone (Reverted to simpler classic look)
+        const { x, y, width: w, height: h } = entity;
         ctx.fillStyle = COLORS.bone;
-        ctx.beginPath(); // Bone shape simplified
-        ctx.arc(entity.x, entity.y + 5, 8, 0, Math.PI * 2);
-        ctx.arc(entity.x, entity.y + 15, 8, 0, Math.PI * 2);
-        ctx.fillRect(entity.x, entity.y + 5, 25, 10);
-        ctx.arc(entity.x + 25, entity.y + 5, 8, 0, Math.PI * 2);
-        ctx.arc(entity.x + 25, entity.y + 15, 8, 0, Math.PI * 2);
+        
+        // Simple Bone Shape
+        ctx.fillRect(x + 5, y + 12, w - 10, 6); // Center shaft
+        
+        // Knobs
+        ctx.beginPath();
+        ctx.arc(x + 5, y + 10, 6, 0, Math.PI * 2);
+        ctx.arc(x + 5, y + 20, 6, 0, Math.PI * 2);
+        ctx.arc(x + w - 5, y + 10, 6, 0, Math.PI * 2);
+        ctx.arc(x + w - 5, y + 20, 6, 0, Math.PI * 2);
         ctx.fill();
+        
       } else if (entity.type === EntityType.OBSTACLE_AIR) {
         drawSquirrel(ctx, entity);
+      } else if (entity.type === EntityType.OBSTACLE_BIRD) {
+        drawBird(ctx, entity, frameCountRef.current);
       } else if (entity.type === EntityType.OBSTACLE_BUSH) {
         // Bush
         ctx.fillStyle = COLORS.bush;
@@ -350,25 +425,30 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         ctx.arc(entity.x + 30, entity.y + 15, 20, 0, Math.PI * 2);
         ctx.arc(entity.x + 45, entity.y + 25, 15, 0, Math.PI * 2);
         ctx.fill();
+      } else if (entity.type === EntityType.OBSTACLE_LOG) {
+        drawLog(ctx, entity);
       } else if (entity.type === EntityType.OBSTACLE_POOP) {
-        // Poop Pile
+        // Poop Pile (Larger)
         ctx.fillStyle = COLORS.poop;
+        const cx = entity.x + entity.width / 2;
+        const bottomY = entity.y + entity.height;
+        
         ctx.beginPath();
-        ctx.moveTo(entity.x, entity.y + entity.height);
-        ctx.lineTo(entity.x + entity.width, entity.y + entity.height);
-        ctx.lineTo(entity.x + entity.width / 2, entity.y);
+        // Base
+        ctx.ellipse(cx, bottomY - 5, entity.width / 2, 8, 0, 0, Math.PI * 2);
+        // Middle
+        ctx.ellipse(cx, bottomY - 15, entity.width / 2.5, 8, 0, 0, Math.PI * 2);
+        // Top
+        ctx.ellipse(cx, bottomY - 25, entity.width / 4, 6, 0, 0, Math.PI * 2);
         ctx.fill();
-        // Stink lines
-        if (frameCountRef.current % 20 < 10) {
+        
+        // Stink lines (Subtle)
+        if (frameCountRef.current % 30 < 15) {
           ctx.strokeStyle = '#8D6E63';
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.moveTo(entity.x + 10, entity.y);
-          ctx.lineTo(entity.x + 10, entity.y - 10);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(entity.x + 15, entity.y + 5);
-          ctx.lineTo(entity.x + 18, entity.y - 5);
+          ctx.moveTo(cx, entity.y - 5);
+          ctx.lineTo(cx, entity.y - 12);
           ctx.stroke();
         }
       } else if (entity.type === EntityType.OBSTACLE_DOG) {
@@ -416,12 +496,22 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => keysPressed.current.add(e.key);
     const handleKeyUp = (e: KeyboardEvent) => keysPressed.current.delete(e.key);
-    const handleTouchStart = () => keysPressed.current.add('Click');
+    
+    const handleTouchStart = (e: TouchEvent) => {
+      // Prevent default logic to avoid "ghost clicks" (delayed mousedown) which cause double jumps
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+      keysPressed.current.add('Click');
+    };
+    
+    const handleMouseDown = () => keysPressed.current.add('Click');
     
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
-    window.addEventListener('touchstart', handleTouchStart);
-    window.addEventListener('mousedown', handleTouchStart);
+    // Use passive: false to allow calling preventDefault
+    window.addEventListener('touchstart', handleTouchStart, { passive: false });
+    window.addEventListener('mousedown', handleMouseDown);
 
     requestRef.current = requestAnimationFrame(update);
 
@@ -429,7 +519,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('mousedown', handleTouchStart);
+      window.removeEventListener('mousedown', handleMouseDown);
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
   }, [update]);

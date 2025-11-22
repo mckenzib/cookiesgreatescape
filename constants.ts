@@ -2,9 +2,9 @@
 export const GRAVITY = 0.6;
 export const JUMP_STRENGTH = -12;
 export const GROUND_HEIGHT = 100; // Pixels from bottom
-export const GAME_SPEED_START = 5;
-export const MAX_SPEED = 12;
-export const ACCELERATION = 0.001;
+export const GAME_SPEED_START = 6;
+export const MAX_SPEED = 24;
+export const ACCELERATION = 0.002;
 
 export const PLAYER_WIDTH = 50;
 export const PLAYER_HEIGHT = 40;
@@ -42,6 +42,8 @@ export const COLORS = {
   squirrel: '#E65100',
   bush: '#2E7D32',
   poop: '#5D4037',
+  log: '#4E342E',
+  bird: '#29B6F6',
   goldenDog: '#FFB300',
   text: '#5D4037'
 };

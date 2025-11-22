@@ -9,6 +9,7 @@ const App: React.FC = () => {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [treatsCollected, setTreatsCollected] = useState(0);
+  const [totalTreats, setTotalTreats] = useState(0);
   const [currentTheme, setCurrentTheme] = useState<LevelTheme>(LevelTheme.NEIGHBORHOOD);
   const [aiMessage, setAiMessage] = useState<string>("");
 
@@ -16,6 +17,11 @@ const App: React.FC = () => {
     const storedHigh = localStorage.getItem('cookie_high_score');
     if (storedHigh) {
       setHighScore(parseInt(storedHigh, 10));
+    }
+    
+    const storedTotalTreats = localStorage.getItem('cookie_total_treats');
+    if (storedTotalTreats) {
+      setTotalTreats(parseInt(storedTotalTreats, 10));
     }
   }, []);
 
@@ -35,6 +41,11 @@ const App: React.FC = () => {
       setHighScore(finalScore);
       localStorage.setItem('cookie_high_score', finalScore.toString());
     }
+
+    // Update Total Treats Persistence
+    const newTotal = totalTreats + finalTreats;
+    setTotalTreats(newTotal);
+    localStorage.setItem('cookie_total_treats', newTotal.toString());
 
     // Generate cozy message locally
     const message = generateCozyMessage(finalScore, finalTreats, currentTheme);
@@ -59,6 +70,7 @@ const App: React.FC = () => {
         score={score}
         highScore={highScore}
         treats={treatsCollected}
+        totalTreats={totalTreats}
         onStart={startGame}
         aiMessage={aiMessage}
         currentTheme={currentTheme}

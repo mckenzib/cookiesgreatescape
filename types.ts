@@ -16,8 +16,10 @@ export enum EntityType {
   OBSTACLE_GROUND = 'OBSTACLE_GROUND', // Puddle
   OBSTACLE_BUSH = 'OBSTACLE_BUSH',     // Bush
   OBSTACLE_POOP = 'OBSTACLE_POOP',     // Poop
+  OBSTACLE_LOG = 'OBSTACLE_LOG',       // Log
   OBSTACLE_DOG = 'OBSTACLE_DOG',       // Other Dog
-  OBSTACLE_AIR = 'OBSTACLE_AIR',       // Squirrel/Bird
+  OBSTACLE_AIR = 'OBSTACLE_AIR',       // Squirrel
+  OBSTACLE_BIRD = 'OBSTACLE_BIRD',     // Bird
   COLLECTIBLE = 'COLLECTIBLE'          // Bone, Cookie
 }
 

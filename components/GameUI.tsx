@@ -6,6 +6,7 @@ interface GameUIProps {
   score: number;
   highScore: number;
   treats: number;
+  totalTreats: number;
   onStart: () => void;
   aiMessage: string;
   currentTheme: LevelTheme;
@@ -16,6 +17,7 @@ export const GameUI: React.FC<GameUIProps> = ({
   score, 
   highScore, 
   treats, 
+  totalTreats,
   onStart, 
   aiMessage, 
   currentTheme
@@ -32,7 +34,7 @@ export const GameUI: React.FC<GameUIProps> = ({
            </div>
         </div>
         <div className="bg-white/80 px-4 py-2 rounded-lg shadow-sm border-2 border-[#8D6E63] flex items-center gap-2">
-          <span>🍖</span> {treats}
+          <span className="text-xl">🍖</span> <span>TREATS: {treats}</span>
         </div>
       </div>
     );
@@ -44,6 +46,10 @@ export const GameUI: React.FC<GameUIProps> = ({
         <div className="bg-[#FFF8E1] p-8 rounded-xl border-4 border-[#8D6E63] shadow-2xl text-center max-w-md">
           <h1 className="text-5xl mb-2 text-[#D84315] font-bold drop-shadow-sm">Cookie's Escape</h1>
           <p className="text-xl mb-6 text-[#5D4037]">A cozy run through the park!</p>
+          
+          <div className="mb-6 bg-[#FFECB3] border-2 border-[#FFC107] px-4 py-2 rounded-full inline-block shadow-sm text-[#8D6E63] font-bold text-lg">
+            TOTAL TREATS COLLECTED: {totalTreats} 🍖
+          </div>
           
           <div className="mb-8 flex justify-center gap-4 text-[#5D4037]">
             <div className="flex flex-col items-center">
